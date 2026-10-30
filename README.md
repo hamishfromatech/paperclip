@@ -44,6 +44,13 @@ Paperclip is a Node.js server and React UI that orchestrates a team of AI agents
 
 It looks like a task manager. Under the hood: org charts, budgets, governance, goal alignment, and agent coordination.
 
+> [!NOTE]
+> This is a fork of [paperclipai/paperclip](https://github.com/paperclipai/paperclip), updated to work with
+> [A-Coder CLI](https://github.com/hamishfromatech/a-coder-cli) and the A-Coder Desktop app. The built-in
+> `acoder_local` adapter runs A-Coder CLI agents locally — session resume across heartbeats, Paperclip skill
+> delivery, managed AI connections, and environment diagnostics. See
+> [docs/adapters/acoder-local.md](docs/adapters/acoder-local.md) for setup and configuration.
+
 **Manage business goals, not pull requests.**
 
 |        | Step            | Example                                                            |
@@ -70,6 +77,7 @@ It looks like a task manager. Under the hood: org charts, budgets, governance, g
     <td align="center" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="ui/public/brands/adapters/hermesagent-dark.svg" /><img src="ui/public/brands/adapters/hermesagent.svg" width="32" height="32" alt="Hermes and Hermes Gateway" /></picture><br/><sub>Hermes<br/>+ Gateway</sub></td>
     <td align="center" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="ui/public/brands/adapters/grok-dark.svg" /><img src="ui/public/brands/adapters/grok.svg" width="32" height="32" alt="Grok Build" /></picture><br/><sub>Grok Build</sub></td>
     <td align="center" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="ui/public/brands/adapters/kimi-color.svg" /><img src="ui/public/brands/adapters/kimi-color-light.svg" width="32" height="32" alt="Kimi Code" /></picture><br/><sub>Kimi Code</sub></td>
+    <td align="center" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="ui/public/brands/adapters/acoder-dark.svg" /><img src="ui/public/brands/adapters/acoder.svg" width="32" height="32" alt="A-Coder CLI and Desktop" /></picture><br/><sub>A-Coder CLI<br/>+ Desktop</sub></td>
   </tr>
 </table>
 

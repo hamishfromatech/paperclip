@@ -31,6 +31,7 @@ const ENABLED_INVITE_ADAPTERS = new Set([
   "kimi_local",
   "opencode_local",
   "pi_local",
+  "acoder_local",
   "cursor",
 ]);
 

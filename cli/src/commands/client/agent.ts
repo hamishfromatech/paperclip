@@ -95,7 +95,7 @@ interface CreatedAgentKey {
 }
 
 interface SkillsInstallSummary {
-  tool: "codex" | "claude" | "kimi";
+  tool: "codex" | "claude" | "kimi" | "acoder";
   target: string;
   linked: string[];
   removed: string[];
@@ -117,6 +117,12 @@ function claudeSkillsHome(): string {
   return path.join(base, "skills");
 }
 
+function acoderSkillsHome(): string {
+  const fromEnv = process.env.A_CODER_CLI_CODING_AGENT_DIR?.trim();
+  const base = fromEnv && fromEnv.length > 0 ? fromEnv : path.join(os.homedir(), ".a-coder", "cli", "agent");
+  return path.join(base, "skills");
+}
+
 function kimiSkillsHome(): string {
   const fromEnv = process.env.KIMI_CODE_HOME?.trim();
   const base = fromEnv && fromEnv.length > 0 ? fromEnv : path.join(os.homedir(), ".kimi-code");
@@ -126,7 +132,7 @@ function kimiSkillsHome(): string {
 async function installSkillsForTarget(
   sourceSkillsDir: string,
   targetSkillsDir: string,
-  tool: "codex" | "claude" | "kimi",
+  tool: "codex" | "claude" | "kimi" | "acoder",
 ): Promise<SkillsInstallSummary> {
   const summary: SkillsInstallSummary = {
     tool,
@@ -783,7 +789,7 @@ export function registerAgentCommands(program: Command): void {
       .option("--key-name <name>", "API key label", "local-cli")
       .option(
         "--no-install-skills",
-        "Skip installing Paperclip skills into ~/.codex/skills, ~/.claude/skills, and ~/.kimi-code/skills",
+        "Skip installing Paperclip skills into ~/.codex/skills, ~/.claude/skills, ~/.kimi-code/skills, and ~/.a-coder/cli/agent/skills",
       )
       .action(async (agentRef: string, opts: AgentLocalCliOptions) => {
         try {
@@ -816,6 +822,7 @@ export function registerAgentCommands(program: Command): void {
               await installSkillsForTarget(skillsDir, codexSkillsHome(), "codex"),
               await installSkillsForTarget(skillsDir, claudeSkillsHome(), "claude"),
               await installSkillsForTarget(skillsDir, kimiSkillsHome(), "kimi"),
+              await installSkillsForTarget(skillsDir, acoderSkillsHome(), "acoder"),
             );
           }
 

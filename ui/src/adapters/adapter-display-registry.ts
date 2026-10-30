@@ -126,6 +126,11 @@ const adapterDisplayMap: Record<string, AdapterDisplayInfo> = {
     description: "Pi harness",
     icon: Terminal,
   },
+  acoder_local: {
+    label: "A-Coder CLI",
+    description: "A-Coder CLI harness",
+    icon: Terminal,
+  },
   cursor: {
     label: "Cursor",
     description: "Cursor CLI harness",

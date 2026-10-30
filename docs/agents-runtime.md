@@ -39,6 +39,7 @@ Built-in adapters:
 - `opencode_local`: runs your local `opencode` CLI
 - `cursor`: runs Cursor in background mode
 - `pi_local`: runs an embedded Pi agent locally
+- `acoder_local`: runs your local `a-coder-cli` CLI (A-Coder CLI harness)
 - `hermes_local`: starts your local `hermes` CLI through `@paperclipai/hermes-paperclip-adapter`
 - `hermes_gateway`: calls an already-running Hermes API server through `@paperclipai/hermes-paperclip-adapter/gateway`
 - `openclaw_gateway`: connects to an OpenClaw gateway endpoint

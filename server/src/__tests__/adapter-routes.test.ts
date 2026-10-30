@@ -365,6 +365,16 @@ describe("adapter routes", () => {
       },
     });
 
+    const acoderAdapter = res.body.find((a: any) => a.type === "acoder_local");
+    expect(acoderAdapter).toBeDefined();
+    expect(acoderAdapter.capabilities).toMatchObject({
+      supportsInstructionsBundle: true,
+      supportsSkills: true,
+      supportsLocalAgentJwt: true,
+      requiresMaterializedRuntimeSkills: true,
+      supportsAcp: false,
+    });
+
     const hermesLocal = res.body.find((a: any) => a.type === "hermes_local");
     expect(hermesLocal).toBeDefined();
     expect(hermesLocal.source).toBe("builtin");

@@ -120,6 +120,7 @@ const GIT_SENSITIVE_LOCAL_ADAPTER_TYPES = new Set([
   "kimi_local",
   "opencode_local",
   "pi_local",
+  "acoder_local",
 ]);
 
 export class WorkspaceValidationFailure extends Error {

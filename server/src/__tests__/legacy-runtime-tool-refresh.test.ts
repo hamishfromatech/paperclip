@@ -20,6 +20,7 @@ import { execute as kimi } from "@paperclipai/adapter-kimi-local/server";
 import { execute as cursor } from "@paperclipai/adapter-cursor-local/server";
 import { execute as opencode } from "@paperclipai/adapter-opencode-local/server";
 import { execute as pi } from "@paperclipai/adapter-pi-local/server";
+import { execute as acoder } from "@paperclipai/adapter-acoder-local/server";
 
 const roots: string[] = [];
 afterEach(async () => { vi.clearAllMocks(); await Promise.all(roots.splice(0).map(root => fs.rm(root, { recursive: true, force: true }))); });
@@ -28,17 +29,18 @@ describe("legacy environment tool access on resumed conversations", () => {
   it.each([
     ["gemini_local", gemini, "--resume"], ["kimi_local", kimi, "-r"],
     ["cursor", cursor, "--resume"], ["opencode_local", opencode, "--session"], ["pi_local", pi, "--session"],
+    ["acoder_local", acoder, "--session"],
   ] as const)("refreshes %s without dropping its conversation", async (type, execute, resumeFlag) => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-cli-tool-refresh-")); roots.push(root);
     const command = path.join(root, "agent");
     await fs.writeFile(command, "#!/bin/sh\nprintf 'provider  model\\nopenai  gpt-5\\n'\n", { mode: 0o755 });
-    const sessionId = type === "pi_local" ? path.join(root, "session.jsonl") : "existing-session";
-    if (type === "pi_local") await fs.writeFile(sessionId, JSON.stringify({ type: "session", cwd: root }) + "\n");
+    const sessionId = type === "pi_local" || type === "acoder_local" ? path.join(root, "session.jsonl") : "existing-session";
+    if (type === "pi_local" || type === "acoder_local") await fs.writeFile(sessionId, JSON.stringify({ type: "session", cwd: root }) + "\n");
     const stdout = type === "kimi_local"
       ? JSON.stringify({ role: "meta", type: "session.resume_hint", session_id: sessionId })
       : type === "opencode_local"
         ? JSON.stringify({ type: "text", sessionID: sessionId, part: { text: "done" } })
-        : type === "pi_local"
+        : type === "pi_local" || type === "acoder_local"
           ? JSON.stringify({ type: "agent_end", messages: [{ role: "assistant", content: "done" }] })
           : JSON.stringify({ type: "result", subtype: "success", session_id: sessionId, result: "done" });
     const invocations: Array<{ args: string[]; env: Record<string, string> }> = [];

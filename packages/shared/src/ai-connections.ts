@@ -85,7 +85,7 @@ export const AI_CONNECTION_CAPABILITIES: Record<
     methods: { api_key: { adapters: ["copilot_runtime"], envKey: "COPILOT_GITHUB_TOKEN" } },
   },
   google: { name: "Google", methods: {
-    api_key: { adapters: ["gemini_local", "pi_local", "antigravity_runtime"], envKey: "GEMINI_API_KEY" },
+    api_key: { adapters: ["gemini_local", "pi_local", "acoder_local", "antigravity_runtime"], envKey: "GEMINI_API_KEY" },
     subscription: { adapters: ["antigravity_runtime"], envKey: "GEMINI_HOME" },
   } },
   anthropic: {
@@ -95,20 +95,20 @@ export const AI_CONNECTION_CAPABILITIES: Record<
         adapters: ["claude_local"],
         envKey: "CLAUDE_CODE_OAUTH_TOKEN",
       },
-      api_key: { adapters: ["claude_local", "pi_local"], envKey: "ANTHROPIC_API_KEY" },
+      api_key: { adapters: ["claude_local", "pi_local", "acoder_local"], envKey: "ANTHROPIC_API_KEY" },
     },
   },
   openai: {
     name: "OpenAI",
     methods: {
       subscription: { adapters: ["codex_local"], envKey: "CODEX_HOME" },
-      api_key: { adapters: ["codex_local", "pi_local"], envKey: "OPENAI_API_KEY" },
+      api_key: { adapters: ["codex_local", "pi_local", "acoder_local"], envKey: "OPENAI_API_KEY" },
     },
   },
   openrouter: {
     name: "OpenRouter",
     methods: {
-      api_key: { adapters: ["opencode_local", "pi_local"], envKey: "OPENROUTER_API_KEY" },
+      api_key: { adapters: ["opencode_local", "pi_local", "acoder_local"], envKey: "OPENROUTER_API_KEY" },
     },
   },
   xai: {
@@ -135,7 +135,7 @@ export function isAiConnectionCompatible(
   if ("routing" in requirement && requirement.routing) return requirement.method === "api_key" && isAiRoutingCompatible(requirement.routing, adapterType);
   // A fixed binding contains identity only. The service checks authoritative
   // connection metadata before resolving credentials or running the harness.
-  if (adapterType === "pi_local") return (requirement.method === "api_key" || ("mode" in requirement && requirement.mode === "responsible_user"))
+  if (adapterType === "pi_local" || adapterType === "acoder_local") return (requirement.method === "api_key" || ("mode" in requirement && requirement.mode === "responsible_user"))
     && ["openrouter", "openai", "anthropic", "google"].includes(requirement.provider)
     && typeof model === "string" && model.startsWith(`${requirement.provider}/`);
   if ("mode" in requirement && requirement.mode !== "responsible_user" && requirement.method === "api_key")

@@ -134,6 +134,15 @@ import {
   listPiModels,
 } from "@paperclipai/adapter-pi-local/server";
 import { agentConfigurationDoc as piAgentConfigurationDoc } from "@paperclipai/adapter-pi-local";
+import {
+  execute as acoderExecute,
+  listAcoderSkills,
+  syncAcoderSkills,
+  testEnvironment as acoderTestEnvironment,
+  sessionCodec as acoderSessionCodec,
+  listAcoderModels,
+} from "@paperclipai/adapter-acoder-local/server";
+import { agentConfigurationDoc as acoderAgentConfigurationDoc } from "@paperclipai/adapter-acoder-local";
 import { BUILTIN_ADAPTER_TYPES } from "./builtin-adapter-types.js";
 import { buildExternalAdapters } from "./plugin-loader.js";
 import { getDisabledAdapterTypes } from "../services/adapter-plugin-store.js";
@@ -944,8 +953,34 @@ const piLocalAdapter: ServerAdapterModule = {
   instructionsPathKey: "instructionsFilePath",
   requiresMaterializedRuntimeSkills: true,
   getRuntimeCommandSpec: (config) =>
-    buildNpmRuntimeCommandSpec(config, "pi", "@mariozechner/pi-coding-agent"),
+    buildNpmRuntimeCommandSpec(config, "pi", "@earendil-works/pi-coding-agent"),
   agentConfigurationDoc: piAgentConfigurationDoc,
+};
+
+const acoderLocalAdapter: ServerAdapterModule = {
+  type: "acoder_local",
+  runtimeToolDelivery: "environment",
+  execute: acoderExecute,
+  testEnvironment: acoderTestEnvironment,
+  listSkills: listAcoderSkills,
+  syncSkills: syncAcoderSkills,
+  sessionCodec: acoderSessionCodec,
+  sessionManagement: getAdapterSessionManagement("acoder_local") ?? undefined,
+  supportsToolRefreshOnResume: true,
+  models: [],
+  listModels: listAcoderModels,
+  supportsLocalAgentJwt: true,
+  supportsInstructionsBundle: true,
+  instructionsPathKey: "instructionsFilePath",
+  requiresMaterializedRuntimeSkills: true,
+  // A-Coder CLI is a self-contained binary distributed via GitHub releases
+  // (not npm-installable), so there is no self-install spec; the sandbox
+  // install path is carried by the adapter's SANDBOX_INSTALL_COMMAND.
+  getRuntimeCommandSpec: (config) => {
+    const command = readConfiguredCommand(config, "a-coder-cli");
+    return { command, detectCommand: command, installCommand: null };
+  },
+  agentConfigurationDoc: acoderAgentConfigurationDoc,
 };
 
 const adaptersByType = new Map<string, ServerAdapterModule>();
@@ -967,6 +1002,7 @@ function registerBuiltInAdapters() {
     paperclipRunnerAdapter,
     openCodeLocalAdapter,
     piLocalAdapter,
+    acoderLocalAdapter,
     cursorCloudAdapter,
     cursorLocalAdapter,
     geminiLocalAdapter,

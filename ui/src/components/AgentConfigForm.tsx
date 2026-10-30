@@ -1428,7 +1428,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
         : adapterType === "opencode_local"
           ? "variant"
           : harnessType === "grok_local" ? "reasoningEffort"
-          : adapterType === "pi_local" ? "thinking" : "effort";
+          : adapterType === "pi_local" || adapterType === "acoder_local" ? "thinking" : "effort";
   const thinkingEffortOptions =
     isCodexHarness
       ? codexReasoningEffortOptions(currentModelId, "Auto").map((option) => ({
@@ -1441,7 +1441,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
           ? openCodeThinkingEffortOptions
           : adapterType === "kimi_local"
             ? kimiThinkingEffortOptions
-            : adapterType === "pi_local"
+            : adapterType === "pi_local" || adapterType === "acoder_local"
               ? [{ id: "", label: "Auto" }, ...["off", "minimal", "low", "medium", "high", "xhigh"].map(id => ({ id, label: id }))]
               : harnessType === "claude_local" || harnessType === "grok_local"
                 ? [{ id: "", label: "Auto" }, ...setupEfforts(harnessType, currentModelId).map((id) => ({
@@ -1953,9 +1953,9 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                 open={modelOpen}
                 onOpenChange={setModelOpen}
                 defaultLabel={adapterType === "claude_local" ? `Default (${DEFAULT_CLAUDE_LOCAL_MODEL})` : undefined}
-                allowDefault={adapterType !== "opencode_local" && adapterType !== "pi_local" && adapterType !== "paperclip_runner"}
-                required={adapterType === "opencode_local" || adapterType === "pi_local" || runnerAcpxAgent === "antigravity"}
-                groupByProvider={!connectionModels && (adapterType === "opencode_local" || adapterType === "pi_local")}
+                allowDefault={adapterType !== "opencode_local" && adapterType !== "pi_local" && adapterType !== "acoder_local" && adapterType !== "paperclip_runner"}
+                required={adapterType === "opencode_local" || adapterType === "pi_local" || adapterType === "acoder_local" || runnerAcpxAgent === "antigravity"}
+                groupByProvider={!connectionModels && (adapterType === "opencode_local" || adapterType === "pi_local" || adapterType === "acoder_local")}
                 preserveOrder={Boolean(connectionModels) || adapterCuratesModelOrder(adapterType)}
                 creatable
                 detectedModel={connectionModels ? undefined : detectedModel}
@@ -2110,6 +2110,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                         gemini_local: "gemini",
                         kimi_local: "kimi",
                         pi_local: "pi",
+                        acoder_local: "a-coder-cli",
                         cursor: "agent",
                         opencode_local: "opencode",
                       } as Record<string, string>)[adapterType] ?? adapterType.replace(/_local$/, "")

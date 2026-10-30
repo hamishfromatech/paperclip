@@ -131,6 +131,15 @@ one exists. If no shared constant exists, use the generated telemetry type as th
 domain. In all cases, the generated telemetry type remains the source of truth
 for the emitted value.
 
+### Adapter type enum
+
+The `adapter_type` dimension is a closed enum in the generated contract. When a
+new built-in adapter is registered, append its type to the `adapter_type` unions
+and add an `adapter_type` entry to `PAPERCLIP_ENUM_DESCRIPTIONS` in
+`generated/paperclip-telemetry.ts` in the same change. Unknown runtime adapter
+types still emit `other`; the enum only grows for adapter types the registry
+can create.
+
 ## Required, Optional, And Sentinel Values
 
 Required and optional dimensions are defined by `EventDimensionsMap`.

@@ -1231,6 +1231,7 @@ function OnboardingWizardInner({
     adapterType === "kimi_local" ||
     adapterType === "opencode_local" ||
     adapterType === "pi_local" ||
+    adapterType === "acoder_local" ||
     adapterType === "cursor";
   // Build adapter grids dynamically from the UI registry + display metadata.
   // External/plugin adapters automatically appear with generic defaults, and
@@ -1710,6 +1711,7 @@ function OnboardingWizardInner({
     gemini_local: "gemini",
     kimi_local: "kimi",
     pi_local: "pi",
+    acoder_local: "a-coder-cli",
     cursor: "agent",
     opencode_local: "opencode",
   };

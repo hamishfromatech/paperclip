@@ -61,6 +61,14 @@ describe("isSandboxProviderSupportedForAdapter", () => {
     ).toBe(true);
   });
 
+  it("treats acoder_local as a remote-managed local adapter", () => {
+    expect(adapterSupportsRemoteManagedEnvironments("acoder_local")).toBe(true);
+    expect(supportedEnvironmentDriversForAdapter("acoder_local")).toEqual(["local", "ssh", "sandbox"]);
+    expect(
+      isSandboxProviderSupportedForAdapter("acoder_local", "fake-plugin", ["fake-plugin"]),
+    ).toBe(true);
+  });
+
   it("includes kimi_local sandbox support in environment capabilities", () => {
     const capabilities = getEnvironmentCapabilities(["kimi_local"], {
       sandboxProviders: {

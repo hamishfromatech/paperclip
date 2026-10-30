@@ -42,7 +42,7 @@ export function managedProviderRouting(
       env.ANTHROPIC_DEFAULT_HAIKU_MODEL = model;
       env.CLAUDE_CODE_SUBAGENT_MODEL = model;
     }
-  } else if (harness === "pi_local" && route.kind === "openrouter") {
+  } else if (["pi_local", "acoder_local"].includes(harness) && route.kind === "openrouter") {
     env.OPENROUTER_API_KEY = credential;
     config.model = aiRoutingModel(route, harness, model);
   } else if (harness === "opencode_local") {

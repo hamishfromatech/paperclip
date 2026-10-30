@@ -60,6 +60,11 @@
     "publishFromCi": true
   },
   {
+    "dir": "packages/adapters/acoder-local",
+    "name": "@paperclipai/adapter-acoder-local",
+    "publishFromCi": true
+  },
+  {
     "dir": "packages/adapters/openclaw-gateway",
     "name": "@paperclipai/adapter-openclaw-gateway",
     "publishFromCi": true

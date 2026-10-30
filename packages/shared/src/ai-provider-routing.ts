@@ -110,6 +110,7 @@ export function isAiRoutingCompatible(
       "codex_local",
       "opencode_local",
       "pi_local",
+      "acoder_local",
       "hermes_local",
     ].includes(harness);
   if (route.protocol === "responses") return harness === "codex_local";
@@ -130,7 +131,7 @@ export function aiRoutingModel(
   harness: string,
   model: string,
 ): string {
-  if (!model || (harness !== "opencode_local" && !(harness === "pi_local" && route.kind === "openrouter"))) return model;
+  if (!model || (harness !== "opencode_local" && !(["pi_local", "acoder_local"].includes(harness) && route.kind === "openrouter"))) return model;
   const prefix = route.kind === "openrouter" ? "openrouter" : "paperclip";
   return model.startsWith(`${prefix}/`) ? model : `${prefix}/${model}`;
 }

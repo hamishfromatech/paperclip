@@ -35,6 +35,7 @@ export function setupEfforts(adapter: string, model = ""): string[] {
         .map((option) => option.value)
         .filter(Boolean);
     case "pi_local":
+    case "acoder_local":
       return ["off", "minimal", "low", "medium", "high", "xhigh"];
     case "grok_local":
       return [...grokLocalReasoningEffortsForModel(model)];

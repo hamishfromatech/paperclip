@@ -66,7 +66,7 @@ export function AgentBulkSettingsSheet({ companyId, agents, totalSelected, onClo
           let request = modelRequests.get(key);
           if (!request) { request = agentsApi.adapterModels(companyId, type, options); modelRequests.set(key, request); }
           models = await request;
-          if (openRouter && !["opencode_local", "pi_local"].includes(harness)) models = models.map(m => ({ ...m, id: m.id.replace(/^openrouter\//, "") }));
+          if (openRouter && !["opencode_local", "pi_local", "acoder_local"].includes(harness)) models = models.map(m => ({ ...m, id: m.id.replace(/^openrouter\//, "") }));
         }
         const restricted = Boolean(routing?.models.length || openRouter || harness === "copilot_runtime");
         return { agent, accounts, binding: effective, models, restricted } satisfies Catalog;

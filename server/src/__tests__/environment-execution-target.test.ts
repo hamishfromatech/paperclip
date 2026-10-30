@@ -268,6 +268,7 @@ describe("resolveEnvironmentExecutionTarget", () => {
       "kimi_local",
       "opencode_local",
       "pi_local",
+      "acoder_local",
     ]) {
       mockResolveEnvironmentDriverConfigForRuntime.mockResolvedValue({
         driver: "sandbox",
