@@ -98,12 +98,59 @@ function parseProviderConfig(
 // the provider entry to enumerate its models explicitly. We accept the providers as
 // config (not hard-coded) so the gateway URL, key, and model list stay declarative.
 //
-// When PAPERCLIP_ACODER_PROVIDERS is set we write {"providers": ...} to a fresh temp
-// dir and point A_CODER_CLI_CODING_AGENT_DIR at it; the managed dir intentionally replaces
-// the host agent dir (credentials travel inside the providers config itself, via
-// a literal apiKey or a server-side-expanded {env:VAR} placeholder). For remote
-// execution targets, execute.ts ships the dir to the sandbox as a runtime asset
-// and repoints A_CODER_CLI_CODING_AGENT_DIR at the in-sandbox copy.
+// A-Coder resolves its agent config dir from $A_CODER_CLI_CODING_AGENT_DIR (falling
+// back to $HOME/.a-coder/cli/agent): settings.json, models.json, auth.json, skills,
+// and MCP server definitions all live there.
+//
+// Paperclip only materializes a managed dir when PAPERCLIP_ACODER_PROVIDERS supplies
+// gateway providers. In that case the managed dir symlinks every entry of the real
+// agent dir (auth.json, settings.json, bin, logs, ...) so credentials, permission
+// mode, and MCP definitions keep working, then overlays models.json with the real
+// providers plus the injected ones. When no custom providers are configured the run
+// uses the operator's real agent dir untouched.
+//
+// Tool policy note: the adapter passes --exclude-tools (not --tools). A --tools
+// allowlist would filter out discovered MCP tools (mcp__<server>__<tool> names are
+// only known after discovery), and the production runbook depends on MCP servers
+// (chrome-devtools, comfy, context7, hf-mcp, ...). Interactive built-ins are excluded
+// by name instead so unattended heartbeats stay deterministic.
+export const ACODER_EXCLUDED_TOOLS = [
+  "ask_user_question",
+  "memory",
+  "plan_mode",
+  "schedule_task",
+  "send_message",
+  "spawn_subagent",
+  "list_subagents",
+  "get_subagent_status",
+  "wait_subagent",
+  "kill_subagent",
+  "run_workflow",
+  "task_create",
+  "task_get",
+  "task_list",
+  "task_update",
+  "team_create",
+  "team_delete",
+  "todo",
+  "decide",
+  "computer",
+] as const;
+
+function defaultAcoderAgentDir(): string {
+  return path.join(os.homedir(), ".a-coder", "cli", "agent");
+}
+
+async function readJsonFile(filePath: string): Promise<Record<string, unknown> | null> {
+  try {
+    const raw = await fs.readFile(filePath, "utf8");
+    const parsed = JSON.parse(raw) as unknown;
+    return isPlainObject(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function prepareAcoderRuntimeConfig(input: {
   env: Record<string, string>;
 }): Promise<PreparedAcoderRuntimeConfig> {
@@ -121,11 +168,35 @@ export async function prepareAcoderRuntimeConfig(input: {
     };
   }
 
+  const realAgentDir = input.env.A_CODER_CLI_CODING_AGENT_DIR?.trim() || defaultAcoderAgentDir();
   const agentConfigDir = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-acoder-agent-config-"));
   try {
+    // Mirror the operator's agent dir so auth.json, settings.json (permission mode,
+    // MCP servers), bin, logs, and installed extensions keep working. models.json is
+    // handled separately below.
+    let entries: string[] = [];
+    try {
+      entries = await fs.readdir(realAgentDir);
+    } catch {
+      entries = [];
+    }
+    await Promise.all(
+      entries
+        .filter((entry) => entry !== "models.json")
+        .map(async (entry) => {
+          try {
+            await fs.symlink(path.join(realAgentDir, entry), path.join(agentConfigDir, entry));
+          } catch {
+            // Entry already exists or the filesystem rejects the link; continue.
+          }
+        }),
+    );
+
+    const realModels = await readJsonFile(path.join(realAgentDir, "models.json"));
+    const realProviders = isPlainObject(realModels?.providers) ? realModels?.providers : {};
     await fs.writeFile(
       path.join(agentConfigDir, "models.json"),
-      `${JSON.stringify({ providers }, null, 2)}\n`,
+      `${JSON.stringify({ ...(realModels ?? {}), providers: { ...realProviders, ...providers } }, null, 2)}\n`,
       "utf8",
     );
   } catch (err) {

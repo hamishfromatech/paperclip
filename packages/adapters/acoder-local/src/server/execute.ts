@@ -59,7 +59,7 @@ import { shellQuote } from "@paperclipai/adapter-utils/ssh";
 import { isAcoderUnknownSessionError, parseAcoderJsonl, createAcoderJsonlParser } from "./parse.js";
 import { createAcoderStdoutCompactor, resolveAcoderStdoutLogMode } from "./stdout-compaction.js";
 import { ensureAcoderModelConfiguredAndAvailable } from "./models.js";
-import { prepareAcoderRuntimeConfig } from "./runtime-config.js";
+import { ACODER_EXCLUDED_TOOLS, prepareAcoderRuntimeConfig } from "./runtime-config.js";
 import { SANDBOX_INSTALL_COMMAND } from "../index.js";
 
 const __moduleDir = path.dirname(fileURLToPath(import.meta.url));
@@ -656,7 +656,12 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       if (modelId) args.push("--model", modelId);
       if (thinking) args.push("--thinking", thinking);
 
-      args.push("--tools", "read,bash,edit,write,grep,find,ls,skill");
+      // Do NOT pass --tools: an allowlist would filter out discovered MCP tools
+      // (mcp__<server>__<tool>), which the runbook needs (chrome-devtools, comfy,
+      // context7, hf-mcp, ...). The managed settings.json pins the headless
+      // built-in set via defaultTools; interactive-only tools are excluded here
+      // so unattended runs stay deterministic.
+      args.push("--exclude-tools", ACODER_EXCLUDED_TOOLS.join(","));
       args.push("--session", sessionFile);
       args.push("--skill", remoteSkillsDir ?? ACODER_AGENT_SKILLS_DIR);
 

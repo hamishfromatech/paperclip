@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { prepareAcoderRuntimeConfig } from "./runtime-config.js";
@@ -231,6 +232,39 @@ describe("prepareAcoderRuntimeConfig", () => {
     expect(prepared.notes).toEqual([
       "PAPERCLIP_ACODER_PROVIDERS: skipped provider(s) with non-object values: a.",
     ]);
+    await prepared.cleanup();
+  });
+
+
+  it("symlinks operator agent-dir entries and merges real + injected providers", async () => {
+    const realDir = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-acoder-real-agent-"));
+    cleanupPaths.add(realDir);
+    await fs.writeFile(
+      path.join(realDir, "settings.json"),
+      JSON.stringify({ permissionMode: "allow", mcpServers: [{ name: "demo" }] }),
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(realDir, "models.json"),
+      JSON.stringify({ providers: { localgw: { baseUrl: "http://local/v1", models: [] } } }),
+      "utf8",
+    );
+
+    const prepared = await prepareAcoderRuntimeConfig({
+      env: {
+        A_CODER_CLI_CODING_AGENT_DIR: realDir,
+        PAPERCLIP_ACODER_PROVIDERS: JSON.stringify({
+          tensorix: { baseUrl: "http://gw/anthropic", apiKey: "k", api: "anthropic-messages", models: [] },
+        }),
+      },
+    });
+    const agentConfigDir = prepared.env.A_CODER_CLI_CODING_AGENT_DIR;
+    cleanupPaths.add(agentConfigDir);
+
+    const settingsLink = await fs.readlink(path.join(agentConfigDir, "settings.json"));
+    expect(settingsLink).toBe(path.join(realDir, "settings.json"));
+    const modelsJson = (await readModelsJson(agentConfigDir)) as { providers: Record<string, unknown> };
+    expect(Object.keys(modelsJson.providers).sort()).toEqual(["localgw", "tensorix"]);
     await prepared.cleanup();
   });
 

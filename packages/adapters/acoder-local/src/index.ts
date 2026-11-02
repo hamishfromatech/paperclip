@@ -52,9 +52,16 @@ Notes:
 - A-Coder CLI supports many providers and models. Use \`a-coder-cli --list-models\` to list available options.
 - Paperclip requires an explicit \`model\` value for \`acoder_local\` agents.
 - Sessions are stored in ~/.a-coder/paperclips/ and resumed with --session.
-- Tools read, bash, edit, write, grep, find, ls, and skill are enabled via --tools;
-  all other built-in tools (ask_user_question, task graph, teams, plan mode, memory) are
-  intentionally disabled so headless runs stay deterministic.
+- Paperclip passes --exclude-tools (not --tools): a --tools allowlist would filter out
+  discovered MCP tools (mcp__<server>__<tool>), and the production runbook needs MCP
+  servers (chrome-devtools, comfy, context7, hf-mcp, ...). Base tools are read, bash,
+  edit, write; interactive-only built-ins (ask_user_question, task graph, teams, plan
+  mode, memory, schedule_task, send_message, subagents) are excluded so headless runs
+  stay deterministic. grep/find/ls and skills remain available through bash and read
+  (skills are listed in the system prompt with their SKILL.md paths).
+- When PAPERCLIP_ACODER_PROVIDERS supplies gateway providers, the managed agent config
+  dir symlinks the operator's auth.json/settings.json/bin so credentials, permission
+  mode, MCP definitions, and installed extensions keep working.
 - Paperclip skills are injected into the A-Coder skills home (~/.a-coder/cli/agent/skills).
 - Agent instructions are appended to A-Coder's system prompt via --append-system-prompt, while the user task is sent via -p.
 `;

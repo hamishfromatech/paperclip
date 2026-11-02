@@ -36,6 +36,13 @@
 
 # Paperclip is the app people use to manage AI agents for work.
 
+> [!IMPORTANT]
+> **This is a fork of [Paperclip](https://github.com/paperclipai/paperclip) maintained for [A-Coder CLI](https://github.com/hamishfromatech/a-coder-cli) support.**
+> It adds a built-in `acoder_local` adapter so A-Coder CLI — and the A-Coder Desktop app — are first-class
+> Paperclip agent runtimes: session resume across heartbeats, Paperclip skill delivery into A-Coder's skills home,
+> managed AI connections, and environment diagnostics. See
+> [docs/adapters/acoder-local.md](docs/adapters/acoder-local.md) for setup and configuration.
+
 Open-source orchestration for teams of AI agents.
 
 **If OpenClaw is an _employee_, Paperclip is the _company_.**
@@ -43,13 +50,6 @@ Open-source orchestration for teams of AI agents.
 Paperclip is a Node.js server and React UI that orchestrates a team of AI agents to run a business. Bring your own agents, assign goals, and track work and costs from one dashboard. Choose models and harnesses per agent while keeping your team's tasks, skills, permissions, and history in one place.
 
 It looks like a task manager. Under the hood: org charts, budgets, governance, goal alignment, and agent coordination.
-
-> [!NOTE]
-> This is a fork of [paperclipai/paperclip](https://github.com/paperclipai/paperclip), updated to work with
-> [A-Coder CLI](https://github.com/hamishfromatech/a-coder-cli) and the A-Coder Desktop app. The built-in
-> `acoder_local` adapter runs A-Coder CLI agents locally — session resume across heartbeats, Paperclip skill
-> delivery, managed AI connections, and environment diagnostics. See
-> [docs/adapters/acoder-local.md](docs/adapters/acoder-local.md) for setup and configuration.
 
 **Manage business goals, not pull requests.**
 

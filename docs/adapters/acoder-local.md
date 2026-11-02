@@ -36,11 +36,25 @@ Runs execute as:
 ```
 a-coder-cli --mode json -p --append-system-prompt <paperclip system prompt extension> \
   [--provider <provider>] [--model <model>] [--thinking <level>] \
-  --tools read,bash,edit,write,grep,find,ls,skill \
+  --exclude-tools ask_user_question,memory,plan_mode,schedule_task,send_message,... \
   --session <session file> --skill <skills home> <prompt>
 ```
 
-The tool allowlist deliberately excludes interactive tools (`ask_user_question`, the task graph, agent teams, plan mode, and memory) so unattended heartbeats stay deterministic. The `skill` tool stays enabled so injected Paperclip skills are invocable.
+Paperclip never passes a `--tools` allowlist: that would filter out discovered MCP
+tools (`mcp__<server>__<tool>`), which the production runbook needs (chrome-devtools,
+comfy, context7, hf-mcp, …). `--exclude-tools` removes interactive-only built-ins
+(`ask_user_question`, the task graph, agent teams, plan mode, memory, `schedule_task`,
+`send_message`, subagents, `todo`, `decide`, `computer`) so unattended heartbeats stay
+deterministic. MCP and extension tools auto-enable on discovery, exactly as in an
+interactive A-Coder session. Base tools are `read`, `bash`, `edit`, `write`;
+`grep`/`find`/`ls` and skills remain reachable through `bash` and `read` (skills are
+listed in the system prompt with their `SKILL.md` paths).
+
+When `PAPERCLIP_ACODER_PROVIDERS` is set, the managed config dir symlinks the
+operator's real `auth.json`, `settings.json`, `bin`, `logs`, and skills home, then
+overlays `models.json` with the real providers plus the injected ones, so credentials,
+permission mode, MCP definitions, and installed extensions keep working without being
+copied. Without custom providers the run uses the real agent dir untouched.
 
 Output is parsed from the `--mode json` JSONL event stream (agent/turn/message lifecycle, tool executions, usage and cost accounting), which drives the run transcript, usage records, and the `paperclipai run --watch` CLI formatter.
 
