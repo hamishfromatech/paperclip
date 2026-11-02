@@ -2328,6 +2328,63 @@ describeEmbeddedPostgres("heartbeat orphaned process recovery", () => {
     expect(await getExecutionBlocker(db, companyId, issueId)).toBeNull();
   });
 
+  it("settles one dead conversation-adapter run once instead of re-creating its hold every sweep", async () => {
+    // A historical run can carry no conversation-continuation evidence while
+    // its adapter is already conversation-capable. Recovery and the disposition
+    // sweep must still agree on a single verdict for that run (THE-8).
+    const { issueId, runId } = await seedRunFixture({
+      adapterType: "acoder_local",
+      agentStatus: "idle",
+      runStatus: "interrupted",
+      runtimeMode: "legacy",
+      runErrorCode: "server_shutdown_interrupted",
+    });
+    const { settleUnrecoverableExecutions } = await import("../services/execution-recovery-resolution.js");
+    const sweep = async () => {
+      const [run] = await db.select().from(heartbeatRuns).where(eq(heartbeatRuns.id, runId));
+      await terminalizeLegacyExecution({ db, run: run!, status: "interrupted" });
+      await settleUnrecoverableExecutions(db);
+    };
+
+    await sweep();
+    expect(await selectRecoveryActionsForIssue(issueId)).toHaveLength(1);
+    await sweep();
+    await sweep();
+    await sweep();
+
+    const actions = await selectRecoveryActionsForIssue(issueId);
+    expect(actions).toHaveLength(1);
+    expect(actions[0]).toMatchObject({ status: "resolved", outcome: "cancelled" });
+    expect(actions[0].evidence.conversationSettlement).toMatchObject({ continuation: "conversation" });
+    const audit = await db.select().from(activityLog).where(and(
+      eq(activityLog.entityId, issueId),
+      eq(activityLog.action, "issue.execution_recovery_settled"),
+    ));
+    expect(audit).toHaveLength(1);
+  });
+
+  it("re-runs a killed acoder_local run in its saved session instead of holding it", async () => {
+    const { agentId, issueId, runId } = await seedRunFixture({
+      adapterType: "acoder_local",
+      agentStatus: "idle",
+      processPid: 999_999_999,
+    });
+
+    expect(await heartbeatService(db).reapOrphanedRuns()).toMatchObject({ reaped: 1, runIds: [runId] });
+
+    const [source] = await db.select().from(heartbeatRuns).where(eq(heartbeatRuns.id, runId));
+    expect(source).toMatchObject({ status: "failed", errorCode: "process_lost" });
+    // The continuation flag is what routes the release into a retry instead
+    // of a no-replay recovery hold (and a blocked task).
+    expect(source.resultJson).toMatchObject({ conversationContinuation: "continue_conversation_v1" });
+    expect(await selectRecoveryActionsForIssue(issueId)).toHaveLength(0);
+    const [issue] = await db.select().from(issues).where(eq(issues.id, issueId));
+    expect(issue).toMatchObject({ status: "in_progress", assigneeAgentId: agentId });
+    const retries = (await selectRecoveryRunsByAgent(agentId)).filter(run => run.retryOfRunId === runId);
+    expect(retries).toHaveLength(1);
+    expect(retries[0].status).toBe("scheduled_retry");
+  });
+
   it("waits for a terminal predecessor's environment lease to be released", async () => {
     const { companyId, issueId, runId } = await seedRunFixture({ agentStatus: "idle", runStatus: "interrupted" });
     await db.update(heartbeatRuns).set({ resultJson: { conversationContinuation: "continue_conversation_v1" } }).where(eq(heartbeatRuns.id, runId));

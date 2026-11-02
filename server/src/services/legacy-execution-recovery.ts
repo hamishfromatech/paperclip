@@ -250,6 +250,17 @@ export async function terminalizeLegacyExecution(input: {
           ] : []),
           or(
             sql`${issueRecoveryActions.evidence}->'executionReconciliation'->>'runId' = ${run.id}`,
+            // A dead run is settled at most once. A recorded conversation fold
+            // or preserve-without-replay verdict for this same run is that
+            // run's one decision. Re-creating a hold here makes the disposition
+            // sweep and this recovery path cancel each other forever.
+            and(
+              sql`${issueRecoveryActions.evidence}->>'runId' = ${run.id}`,
+              or(
+                sql`${issueRecoveryActions.evidence} ? 'conversationSettlement'`,
+                sql`${issueRecoveryActions.evidence} ? 'automaticRecovery'`,
+              ),
+            ),
             and(
               sql`${issueRecoveryActions.evidence}->>'runId' = ${run.id}`,
               sql`exists (

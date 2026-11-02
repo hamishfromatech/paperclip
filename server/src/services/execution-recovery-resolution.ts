@@ -453,6 +453,15 @@ export async function settleUnrecoverableExecutions(
     for (const candidate of foldable) {
       if (await getConversationOwnershipBlocker(tx as unknown as Db, candidate.companyId, candidate.sourceIssueId)) continue;
       await notifyUnsafeWorkspaceExportRecovery(tx, { companyId: candidate.companyId, issueId: candidate.sourceIssueId });
+      // The settlement identity is what stops recovery from minting a fresh
+      // action for the same dead run on its next sweep. Without it the fold
+      // resolves the hold, recovery sees "nothing adjudicated" and re-creates
+      // it, and the two sweeps cancel each other forever.
+      const settlement = {
+        schema: "paperclip.conversation-settlement.v1",
+        continuation: "conversation",
+        settledAt: now.toISOString(),
+      };
       const [action] = await tx.update(issueRecoveryActions).set({
         status: "resolved",
         outcome: "cancelled",
@@ -462,9 +471,12 @@ export async function settleUnrecoverableExecutions(
         resolutionNote: "Conversation continuation does not replay prior tool calls.",
         wakePolicy: null,
         monitorPolicy: null,
-        evidence: sql`case when ${issueRecoveryActions.evidence} ? 'automaticRecovery'
-          then jsonb_set(${issueRecoveryActions.evidence}, '{automaticRecovery,replay}', '"conversation_continuation"'::jsonb)
-          else ${issueRecoveryActions.evidence} end`,
+        evidence: sql`jsonb_set(
+          case when ${issueRecoveryActions.evidence} ? 'automaticRecovery'
+            then jsonb_set(${issueRecoveryActions.evidence}, '{automaticRecovery,replay}', '"conversation_continuation"'::jsonb)
+            else ${issueRecoveryActions.evidence} end,
+          '{conversationSettlement}',
+          ${JSON.stringify(settlement)}::jsonb)`,
       }).where(and(obsoleteConversationHold, eq(issueRecoveryActions.id, candidate.id))).returning();
       if (!action) continue;
       await persistActivity(tx as unknown as Db, {

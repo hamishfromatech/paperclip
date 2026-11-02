@@ -7,9 +7,13 @@ import { hasRemoteTerminationReceipt } from "./remote-execution-termination.js";
 
 // These adapters accept a conversation turn. Retrying a process or webhook can
 // replay the action itself, so those adapters retain their recovery contract.
+// acoder_local belongs here for the same reason as pi_local: it persists a JSONL
+// session (--session) across heartbeats, and on load it synthesizes an error tool
+// result for any tool call that was interrupted mid-execution. A killed run can
+// therefore resume from the last valid turn instead of becoming a no-replay hold.
 export const CONVERSATION_ADAPTER_TYPES = [
   "claude_local", "codex_local", "cursor", "gemini_local", "opencode_local",
-  "pi_local", "grok_local", "kimi_local", "hermes_local",
+  "pi_local", "grok_local", "kimi_local", "hermes_local", "acoder_local",
 ] as const;
 
 export function isConversationAdapter(adapterType: string): boolean {
